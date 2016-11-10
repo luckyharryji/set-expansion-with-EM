@@ -14,7 +14,7 @@ public class TextMasterEM {
 		_pZgivenW = new double[WORDS][TOPICS];
 		_pCgivenZ = new double[TOPICS][CONTEXTS];
 	}
-	
+
 	//returns keys in ascending order of values
 	//allows duplicate values (defaults to input order)
 	public static ArrayList<String> sortKeysByVal(HashMap<String, Double> hm) {
@@ -40,7 +40,7 @@ public class TextMasterEM {
 		}
 		return out;
 	}
-	
+
 	public static HashMap<String, Integer> readDictionary(String inFile) throws Exception {
 		BufferedReader brIn = new BufferedReader(new FileReader(inFile));
 		String sLine;
@@ -62,7 +62,7 @@ public class TextMasterEM {
 		return out;
 	}
 
-	
+
 	public static void readArray(double[][] aO, BufferedReader brIn) throws
     Exception {
 		for(int i=0; i < aO.length; i++) {
@@ -76,7 +76,7 @@ public class TextMasterEM {
 		    aO[i] = Double.parseDouble(sLine);
 		}
 	}
-		
+
 	public static void writeArray(double[][] aO, BufferedWriter bwOut) throws
 		    Exception {
 		for (int i = 0; i < aO.length; i++) {
@@ -88,7 +88,7 @@ public class TextMasterEM {
 		for (int i = 0; i < aO.length; i++)
 		    bwOut.write(aO[i] + "\r\n");
 	}
-	
+
 	public void renormalize() {
 		for(int i=0; i<_pZgivenW.length; i++) {
 			double sum = 0.0;
@@ -106,18 +106,18 @@ public class TextMasterEM {
 				_pCgivenZ[i][j] /= sum;
 		}
 	}
-	
+
 	//sets parameters randomly and re-normalizes
 	public void randomInit() {
-		for(int i=0; i<_pZgivenW.length; i++) 
+		for(int i=0; i<_pZgivenW.length; i++)
 			for(int j=0; j<_pZgivenW[i].length; j++)
 				_pZgivenW[i][j] = Math.random();
-		for(int i=0; i<_pCgivenZ.length; i++) 
+		for(int i=0; i<_pCgivenZ.length; i++)
 			for(int j=0; j<_pCgivenZ[i].length; j++)
 				_pCgivenZ[i][j] = Math.random();
 		renormalize();
 	}
-	
+
 	public static TextMasterEM readEMModel(String inFile) throws Exception {
 		BufferedReader brIn = new BufferedReader(new FileReader(inFile));
 		String sLine;
@@ -129,17 +129,17 @@ public class TextMasterEM {
 		brIn.close();
 		return outTM;
 	}
-	
+
 	public void writeEMModel(String outFile, TextMasterEM outTM) throws Exception {
 		BufferedWriter bwOut = new BufferedWriter(new FileWriter(outFile));
 		String sLine;
-		
+
 		bwOut.write(outTM.TOPICS + "\r\n");
 		writeArray(_pZgivenW, bwOut);
 		writeArray(_pCgivenZ, bwOut);
 		bwOut.close();
 	}
-	
+
 	//HACK:hardcoded data length for this assignment
 	public static int[][] readData(String inFile) throws Exception {
 		BufferedReader brIn = new BufferedReader(new FileReader(inFile));
@@ -154,37 +154,37 @@ public class TextMasterEM {
 		brIn.close();
 		return data;
 	}
-	
+
 	public void trainEM(String dataFile, int ITERATIONS, String outputModelFile) throws Exception {
 		int [][] data = readData(dataFile);
 		randomInit();
-		
+
 		double [][] expectedWtoZ = new double[WORDS][TOPICS];
 		double [][] expectedZtoC = new double[TOPICS][CONTEXTS];
-		
+
 		for(int iter=0; iter<ITERATIONS;iter++) {
 			double logLikelihood = 0.0;
 			//sum up expected sufficient statistics
 			for(int i=0; i<data.length;i++) {
 				int wordID = data[i][0];
 				int contextID = data[i][1];
-				
+
 				//estimate P(Z | wordID, contextID):
 				double [] pZCGivenW = new double[TOPICS];
 				double sum = 0.0;
-				
+
 
 				//below, you must do three things:
-				//1. increment logLikelihood 
+				//1. increment logLikelihood
 				//  with the current conditional likelihood P(contextID | wordID) for this
 				// example given the model
 				//2. increment for each z expectedWtoZ with the expected number of observations of
-				//  (wordID and Z) due to this example, and likewise 
+				//  (wordID and Z) due to this example, and likewise
 				//3. increment for each z expectedZtoC with the expected number of observations of
 				//  (Z and contextID) due to this example
 
 				//NOTE: you can use the code I wrote below as a starting point, or not
-				//The correct algorithm can be obtained by uncommenting and completing each 
+				//The correct algorithm can be obtained by uncommenting and completing each
 				//of the four lines that start with //SUGGESTION:
 				//The only variables you need are those local to this function, and the
 				//class variables representing the parameters of the model ( _pZgivenW
@@ -194,10 +194,13 @@ public class TextMasterEM {
 				//First, set pZCGivenW equal to the likelihood of generating Z and C given W, i.e. P(C, Z | W).
 				for(int z=0;z<TOPICS;z++) {
 					//SUGGESTION: pZCGivenW[z] = ...
+          pZCGivenW[z] = _pZgivenW[wordID][z] * _pCgivenZ[z][contextID];
 					sum += pZCGivenW[z];
 				}
 				//now increment the running log likelihood counter by log P(C | W):
 				//SUGGESTION: logLikelihood += ...
+        // sum over z for P(c, z | w) to get P(c | w)
+        logLikelihood += Math.log(sum);
 
 				//now we normalize the P(C, Z | W) terms to sum to one for each Z, giving the expected number of times each Z occurs:
 				double [] pZGivenCW = new double[TOPICS];
@@ -208,15 +211,16 @@ public class TextMasterEM {
 				for(int z=0;z<TOPICS;z++) {
 					//SUGGESTION: expectedWtoZ[wordID][z] += ...
 					//SUGGESTION: expectedZtoC[z][contextID] += ...
+          // expectedWtoZ[wordID][z] += (pZGivenCW[z] / ) / (data.length);
 				}
 
 				//END code to be changed for assignment
 			}
 			//estimate new parameters based on expected sufficient statistics:
-			for(int i=0; i<_pZgivenW.length; i++) 
+			for(int i=0; i<_pZgivenW.length; i++)
 				for(int j=0; j<_pZgivenW[i].length; j++)
 					_pZgivenW[i][j] = expectedWtoZ[i][j];
-			for(int i=0; i<_pCgivenZ.length; i++) 
+			for(int i=0; i<_pCgivenZ.length; i++)
 				for(int j=0; j<_pCgivenZ[i].length; j++)
 					_pCgivenZ[i][j] = expectedZtoC[i][j];
 			renormalize();
@@ -225,7 +229,7 @@ public class TextMasterEM {
 		}
 		writeEMModel(outputModelFile, this);
 	}
-	
+
     private static double KL(double [] a, double [] b) throws Exception
     {
         if(a.length != b.length)
@@ -240,12 +244,12 @@ public class TextMasterEM {
         return sum;
     }
 
-	
+
 	public static void testWordVectors(String modelFile, String wordDictionary, String correctExamplesFile,
 			String [] seedExamples) throws Exception {
 		TextMasterEM tm = readEMModel(modelFile);
 		HashMap<String, Integer> wordDict = readDictionary(wordDictionary);
-		
+
 		//build prototype array
 		double [] ptype = new double[tm.TOPICS];
 //		for(int j=0; j<tm.TOPICS;j++) {
@@ -266,11 +270,11 @@ public class TextMasterEM {
 			System.out.print(ptype[j] + " ");
 		}
 		System.out.println();
-		
+
 		//score examples by distance from prototype array
 		TreeSet<String> correctExamples = readTreeSet(correctExamplesFile);
 		HashMap<String, Double> wordScores = new HashMap<String, Double>();
-		
+
 		Iterator<String> wordIt = wordDict.keySet().iterator();
 		while(wordIt.hasNext()) {
 			String word = wordIt.next();
@@ -280,7 +284,7 @@ public class TextMasterEM {
 				score = 1000000.0;
 			wordScores.put(word, score);
 		}
-		
+
 		//compute average precision
 		TreeSet<String> seedTS = new TreeSet<String>();
 		for(int i=0; i<seedExamples.length; i++)
@@ -293,13 +297,13 @@ public class TextMasterEM {
 			String word = wordIt.next();
 			System.out.println(word + "\t" + wordScores.get(word));
 		}
-		
+
 		wordIt = sortedWords.iterator();
 		double sumPrecision = 0.0;
 		double currentPrecision = 0.0;
 		double examplesProcessed = 0.0;
 		double totalPositive = 0.0;
-		
+
 		while(wordIt.hasNext()) {
 			String word = wordIt.next();
 			if(seedTS.contains(word)) continue;
@@ -316,13 +320,13 @@ public class TextMasterEM {
 		}
 		System.out.println("Average Precision " + (sumPrecision/totalPositive) + " vs. baseline " + ((double)(correctExamples.size()-seedTS.size())/(double)(sortedWords.size()-seedTS.size())));
 	}
-	
+
 	public static void main(String [] args) throws Exception {
 		try {
 		if(args[0].equalsIgnoreCase("train"))
 		{
 			TextMasterEM tm = new TextMasterEM(Integer.parseInt(args[4]));
-			tm.trainEM(args[1], Integer.parseInt(args[2]), args[3]);			
+			tm.trainEM(args[1], Integer.parseInt(args[2]), args[3]);
 			return;
 		}
 		if(args[0].equalsIgnoreCase("test")) {
@@ -337,7 +341,7 @@ public class TextMasterEM {
 		System.out.println("Usage: ");
 		System.out.println("TextMasterEM train <data file> <num iterations> <output model file> <num topics>");
 		System.out.println("TextMasterEM test <model file> <word dictionary> <correct examples file> <seed1> <seed2> <seed3>");
-		
-		
+
+
 	}
 }
