@@ -211,7 +211,8 @@ public class TextMasterEM {
 				for(int z=0;z<TOPICS;z++) {
 					//SUGGESTION: expectedWtoZ[wordID][z] += ...
 					//SUGGESTION: expectedZtoC[z][contextID] += ...
-          // expectedWtoZ[wordID][z] += (pZGivenCW[z] / ) / (data.length);
+          expectedWtoZ[wordID][z] += pZGivenCW[z];
+          expectedZtoC[z][contextID] += pZGivenCW[z];
 				}
 
 				//END code to be changed for assignment
